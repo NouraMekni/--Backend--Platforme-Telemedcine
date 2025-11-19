@@ -7,6 +7,8 @@ import com.mycompany.platforme_telemedcine.Models.Medecin;
 import com.mycompany.platforme_telemedcine.Services.UserService;
 import com.mycompany.platforme_telemedcine.Services.PatientService;
 import com.mycompany.platforme_telemedcine.Services.MedecinService;
+import com.mycompany.platforme_telemedcine.Services.AdministrateurService;
+import com.mycompany.platforme_telemedcine.Models.Administrateur;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173")
 public class UserRestController {
 
     @Autowired
@@ -27,6 +28,9 @@ public class UserRestController {
 
     @Autowired
     private MedecinService medecinService;
+
+    @Autowired
+    private AdministrateurService administrateurService;
 
     @PostMapping
     public ResponseEntity<?> addUser(@RequestBody Map<String, Object> requestBody) {
@@ -95,14 +99,117 @@ public class UserRestController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        User u = userService.getUserById(id);
-        if (u != null) {
-            user.setId(id);
-            userService.updateUser(user);
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> requestBody) {
+        try {
+            User existingUser = userService.getUserById(id);
+            if (existingUser == null) {
+                return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+            }
+            
+            // Check if role is being changed
+            UserRole newRole = existingUser.getRole();
+            if (requestBody.containsKey("role")) {
+                try {
+                    newRole = UserRole.valueOf(requestBody.get("role").toString().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return new ResponseEntity<>("Invalid role", HttpStatus.BAD_REQUEST);
+                }
+            }
+            
+            // If role changed, delete old entity and create new one with new role
+            if (newRole != existingUser.getRole()) {
+                // Delete the old entity
+                if (existingUser.getRole() == UserRole.PATIENT) {
+                    patientService.deletePatientById(id);
+                } else if (existingUser.getRole() == UserRole.MEDECIN) {
+                    medecinService.deleteMedecinById(id);
+                } else if (existingUser.getRole() == UserRole.ADMINISTRATEUR) {
+                    administrateurService.deleteAdministrateurById(id);
+                }
+                
+                // Create new entity with new role
+                User savedUser = null;
+                String name = requestBody.containsKey("name") ? requestBody.get("name").toString() : existingUser.getName();
+                String prenom = requestBody.containsKey("prenom") ? requestBody.get("prenom").toString() : existingUser.getPrenom();
+                String email = requestBody.containsKey("email") ? requestBody.get("email").toString() : existingUser.getEmail();
+                String password = requestBody.containsKey("password") && !requestBody.get("password").toString().isEmpty() 
+                    ? requestBody.get("password").toString() 
+                    : existingUser.getPassword();
+                
+                if (newRole == UserRole.PATIENT) {
+                    Patient patient = new Patient();
+                    patient.setName(name);
+                    patient.setPrenom(prenom);
+                    patient.setEmail(email);
+                    patient.setPassword(password);
+                    patient.setRole(UserRole.PATIENT);
+                    savedUser = patientService.createPatient(patient);
+                } else if (newRole == UserRole.MEDECIN) {
+                    Medecin medecin = new Medecin();
+                    medecin.setName(name);
+                    medecin.setPrenom(prenom);
+                    medecin.setEmail(email);
+                    medecin.setPassword(password);
+                    medecin.setRole(UserRole.MEDECIN);
+                    savedUser = medecinService.createMedecin(medecin);
+                } else if (newRole == UserRole.ADMINISTRATEUR) {
+                    Administrateur admin = new Administrateur();
+                    admin.setName(name);
+                    admin.setPrenom(prenom);
+                    admin.setEmail(email);
+                    admin.setPassword(password);
+                    admin.setRole(UserRole.ADMINISTRATEUR);
+                    savedUser = administrateurService.createAdministrateur(admin);
+                }
+                
+                return new ResponseEntity<>(savedUser, HttpStatus.OK);
+            }
+            
+            // Role not changed, just update fields
+            User updatedUser = null;
+            if (existingUser.getRole() == UserRole.PATIENT) {
+                Patient patient = patientService.getPatientById(id);
+                if (patient != null) {
+                    if (requestBody.containsKey("name")) patient.setName(requestBody.get("name").toString());
+                    if (requestBody.containsKey("prenom")) patient.setPrenom(requestBody.get("prenom").toString());
+                    if (requestBody.containsKey("email")) patient.setEmail(requestBody.get("email").toString());
+                    if (requestBody.containsKey("password") && !requestBody.get("password").toString().isEmpty()) {
+                        patient.setPassword(requestBody.get("password").toString());
+                    }
+                    updatedUser = patientService.updatePatient(patient);
+                }
+            } else if (existingUser.getRole() == UserRole.MEDECIN) {
+                Medecin medecin = medecinService.getMedecinById(id);
+                if (medecin != null) {
+                    if (requestBody.containsKey("name")) medecin.setName(requestBody.get("name").toString());
+                    if (requestBody.containsKey("prenom")) medecin.setPrenom(requestBody.get("prenom").toString());
+                    if (requestBody.containsKey("email")) medecin.setEmail(requestBody.get("email").toString());
+                    if (requestBody.containsKey("password") && !requestBody.get("password").toString().isEmpty()) {
+                        medecin.setPassword(requestBody.get("password").toString());
+                    }
+                    updatedUser = medecinService.updateMedecin(medecin);
+                }
+            } else if (existingUser.getRole() == UserRole.ADMINISTRATEUR) {
+                Administrateur admin = administrateurService.getAdministrateurById(id);
+                if (admin != null) {
+                    if (requestBody.containsKey("name")) admin.setName(requestBody.get("name").toString());
+                    if (requestBody.containsKey("prenom")) admin.setPrenom(requestBody.get("prenom").toString());
+                    if (requestBody.containsKey("email")) admin.setEmail(requestBody.get("email").toString());
+                    if (requestBody.containsKey("password") && !requestBody.get("password").toString().isEmpty()) {
+                        admin.setPassword(requestBody.get("password").toString());
+                    }
+                    updatedUser = administrateurService.updateAdministrateur(admin);
+                }
+            }
+            
+            if (updatedUser != null) {
+                return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Error updating user", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error updating user: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
