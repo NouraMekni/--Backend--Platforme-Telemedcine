@@ -29,19 +29,32 @@ public class RendezVousRestController {
     @Autowired
     ConsultationService consultationService;
 
+
     @PostMapping("/add/{patientId}/{medecinId}")
-    public ResponseEntity<RendezVous> addRendezVous(@RequestBody RendezVous rendezVous, @PathVariable Long patientId, @PathVariable Long medecinId) {
+    public ResponseEntity<RendezVous> addRendezVous(
+            @RequestBody RendezVous rendezVous,
+            @PathVariable Long patientId,
+            @PathVariable Long medecinId) {
         try{
+            if (rendezVous.getDate() == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
             Patient patient = patientService.getPatientById(patientId);
             Medecin medecin = medecinService.getMedecinById(medecinId);
+
             rendezVous.setPatient(patient);
             rendezVous.setMedecin(medecin);
-            RendezVous rendezVous1 = rendezVousService.createRendezvous(rendezVous);
-            return new ResponseEntity<>(rendezVous1, HttpStatus.CREATED);
-        }catch (Exception e) {
+
+            RendezVous saved = rendezVousService.createRendezvous(rendezVous);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     @PostMapping("/add2/{patientId}/{medecinId}/{consultationId}")
     public ResponseEntity<RendezVous> addRendezVousWithConsultation(
@@ -71,6 +84,15 @@ public class RendezVousRestController {
         }
         return new ResponseEntity<>(rendezVousList, HttpStatus.OK);
     }
+
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<RendezVous>> getByPatient(@PathVariable Long patientId) {
+        List<RendezVous> list = rendezVousService.getByPatient(patientId);
+        return list.isEmpty()
+                ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(list, HttpStatus.OK);
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<RendezVous> getRendezVousById(@PathVariable Long id) {

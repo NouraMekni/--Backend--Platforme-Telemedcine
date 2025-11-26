@@ -10,4 +10,6 @@ public interface MedecinService {
     void deleteMedecinById(Long id);
     Medecin getMedecinById(Long id);
     List<Medecin> getAllMedecin();
+
+    Medecin getMedecinByEmail(String email);
 }

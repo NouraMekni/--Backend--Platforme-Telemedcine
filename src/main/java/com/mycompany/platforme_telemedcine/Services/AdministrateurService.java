@@ -7,4 +7,6 @@ public interface AdministrateurService {
     Administrateur updateAdministrateur(Administrateur administrateur);
     Administrateur getAdministrateurById(Long id);
     void deleteAdministrateurById(Long id);
+
+    Administrateur getAdminByEmail(String email);
 }

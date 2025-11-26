@@ -30,4 +30,9 @@ public class AdministrateurServiceImp implements AdministrateurService {
     public void deleteAdministrateurById(Long id) {
         this.administrateurRepository.deleteById(id);
     }
+
+    @Override
+    public Administrateur getAdminByEmail(String email) {
+        return administrateurRepository.findByEmail(email);
+    }
 }

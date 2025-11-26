@@ -38,4 +38,9 @@ public class MedecinServiceImp implements MedecinService {
     public List<Medecin> getAllMedecin() {
         return medecinRepository.findAll();
     }
+
+    @Override
+    public Medecin getMedecinByEmail(String email) {
+        return medecinRepository.findMedecinByEmail(email);
+    }
 }

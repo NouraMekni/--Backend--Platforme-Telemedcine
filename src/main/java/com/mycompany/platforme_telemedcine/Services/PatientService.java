@@ -10,4 +10,5 @@ public interface PatientService {
     void deletePatientById(Long id);
     List<Patient> getAllPatients();
     Patient getPatientById(Long id);
+    Patient getPatientByEmail(String email);
 }

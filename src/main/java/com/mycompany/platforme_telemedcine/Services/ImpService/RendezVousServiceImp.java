@@ -42,4 +42,9 @@ public class RendezVousServiceImp implements RendezVousService {
     public List<RendezVous> getAllRendezVous() {
         return rendezVousRepository.findAll();
     }
+
+    @Override
+    public List<RendezVous> getByPatient(Long patientId) {
+        return rendezVousRepository.findByPatientId(patientId);
+    }
 }

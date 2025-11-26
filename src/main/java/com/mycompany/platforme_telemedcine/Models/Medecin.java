@@ -7,6 +7,7 @@ import jakarta.persistence.OneToMany;
 import java.util.List;
 
 @Entity
+
 public class Medecin extends User{
     private String specialte;
     private String disponibilite;

@@ -38,4 +38,9 @@ public class PatientServiceImp implements PatientService {
     public Patient getPatientById(Long id) {
         return patientRepository.findById(id).get();
     }
+
+    @Override
+    public Patient getPatientByEmail(String email) {
+        return patientRepository.findByEmail(email);
+    }
 }
