@@ -12,6 +12,10 @@ public class RendezVous {
     private Long id;
     private LocalDate date;
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    private StatusRendezVous status = StatusRendezVous.PENDING;
+
     @ManyToOne
     Medecin medecin;
     @ManyToOne
@@ -66,5 +70,13 @@ public class RendezVous {
 
     public void setConsultation(Consultation consultation) {
         this.consultation = consultation;
+    }
+
+    public StatusRendezVous getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusRendezVous status) {
+        this.status = status;
     }
 }

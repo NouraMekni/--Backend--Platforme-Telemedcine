@@ -47,4 +47,10 @@ public class RendezVousServiceImp implements RendezVousService {
     public List<RendezVous> getByPatient(Long patientId) {
         return rendezVousRepository.findByPatientId(patientId);
     }
+
+    @Override
+    public List<RendezVous> getRendezVousByMedecinId(Long medecinId) {
+        return rendezVousRepository.findByMedecinId(medecinId);
+    }
+
 }

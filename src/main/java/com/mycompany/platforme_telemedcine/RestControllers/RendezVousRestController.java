@@ -1,9 +1,6 @@
 package com.mycompany.platforme_telemedcine.RestControllers;
 
-import com.mycompany.platforme_telemedcine.Models.Consultation;
-import com.mycompany.platforme_telemedcine.Models.Medecin;
-import com.mycompany.platforme_telemedcine.Models.Patient;
-import com.mycompany.platforme_telemedcine.Models.RendezVous;
+import com.mycompany.platforme_telemedcine.Models.*;
 import com.mycompany.platforme_telemedcine.Services.ConsultationService;
 import com.mycompany.platforme_telemedcine.Services.MedecinService;
 import com.mycompany.platforme_telemedcine.Services.PatientService;
@@ -14,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rendezvous")
@@ -104,22 +102,68 @@ public class RendezVousRestController {
         }
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<RendezVous> updateRendezVous(@PathVariable Long id, @RequestBody RendezVous rendezVous) {
-        RendezVous existingRendezVous = rendezVousService.getRendezVousById(id);
-        if (existingRendezVous == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @GetMapping("/medecin/{medecinId}")
+    public ResponseEntity<List<RendezVous>> getRDVsByMedecin(@PathVariable Long medecinId) {
+        try {
+            List<RendezVous> rdvs = rendezVousService.getRendezVousByMedecinId(medecinId);
+            return ResponseEntity.ok(rdvs);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        if (rendezVous.getDate() != null) {
-            existingRendezVous.setDate(rendezVous.getDate());
-        }
-        if (rendezVous.getDescription() != null) {
-            existingRendezVous.setDescription(rendezVous.getDescription());
-        }
-
-        RendezVous updated = rendezVousService.updateRendezVous(existingRendezVous);
-        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateRendezVous(
+            @PathVariable Long id,
+            @RequestBody RendezVous updatedData
+    ) {
+        try {
+            RendezVous rdv = rendezVousService.getRendezVousById(id);
+
+            if (rdv == null) {
+                return new ResponseEntity<>("Rendez-vous not found", HttpStatus.NOT_FOUND);
+            }
+
+            // Update fields
+            if (updatedData.getDate() != null) rdv.setDate(updatedData.getDate());
+            if (updatedData.getDescription() != null) rdv.setDescription(updatedData.getDescription());
+
+            RendezVous saved = rendezVousService.createRendezvous(rdv);
+
+            return new ResponseEntity<>(saved, HttpStatus.OK);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error updating RDV", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<RendezVous> updateStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+
+        try {
+            String statusString = body.get("status");
+
+            StatusRendezVous newStatus = StatusRendezVous.valueOf(statusString.toUpperCase());
+
+            RendezVous rdv = rendezVousService.getRendezVousById(id);
+            rdv.setStatus(newStatus);
+
+            RendezVous updated = rendezVousService.createRendezvous(rdv);
+
+            return ResponseEntity.ok(updated);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
 
 
     @DeleteMapping("/{id}")

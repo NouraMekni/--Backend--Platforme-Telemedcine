@@ -13,4 +13,6 @@ public interface RendezVousService {
     RendezVous updateRendezVous(RendezVous rendezVous);
     List<RendezVous> getAllRendezVous();
     List<RendezVous> getByPatient(Long patientId);
+    List<RendezVous> getRendezVousByMedecinId(Long medecinId);
+
 }
