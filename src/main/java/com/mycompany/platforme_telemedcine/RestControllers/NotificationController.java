@@ -1,6 +1,6 @@
 package com.mycompany.platforme_telemedcine.RestControllers;
 import com.mycompany.platforme_telemedcine.Models.Notification;
-import com.mycompany.platforme_telemedcine.Services.NotificationService;
+import com.mycompany.platforme_telemedcine.Services.ImpService.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;

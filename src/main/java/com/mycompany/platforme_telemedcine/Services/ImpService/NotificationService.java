@@ -1,4 +1,4 @@
-package com.mycompany.platforme_telemedcine.Services;
+package com.mycompany.platforme_telemedcine.Services.ImpService;
 
 import com.mycompany.platforme_telemedcine.Models.Notification;
 import com.mycompany.platforme_telemedcine.Repository.NotificationRepository;
