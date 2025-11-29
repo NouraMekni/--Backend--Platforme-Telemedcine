@@ -95,4 +95,6 @@ public class Patient extends User{
     public void setAntecedentsMedicaux(String antecedentsMedicaux) {
         this.antecedentsMedicaux = antecedentsMedicaux;
     }
+
+
 }

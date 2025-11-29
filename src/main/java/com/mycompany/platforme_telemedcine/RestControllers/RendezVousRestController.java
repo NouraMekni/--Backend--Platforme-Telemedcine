@@ -53,9 +53,9 @@ public class RendezVousRestController {
             RendezVous saved = rendezVousService.createRendezvous(rendezVous);
 
             String message = "Nouveau rendez-vous demandé par " + patient.getName();
-            System.out.println("📅 Rendez-vous créé - Patient: " + patient.getName() + " (ID: " + patientId + ")");
-            System.out.println("👨‍⚕️ Médecin ID: " + medecinId);
-            System.out.println("📤 Envoi de notification...");
+            System.out.println("Rendez-vous créé - Patient: " + patient.getName() + " (ID: " + patientId + ")");
+            System.out.println("Médecin ID: " + medecinId);
+            System.out.println("Envoi de notification...");
             notificationController.sendNotificationToMedecin(medecinId, message);
 
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
@@ -131,13 +131,25 @@ public class RendezVousRestController {
     @GetMapping("/medecin/{medecinId}")
     public ResponseEntity<List<RendezVous>> getRDVsByMedecin(@PathVariable Long medecinId) {
         try {
+            System.out.println("Fetching RDVs for medecin ID: " + medecinId);
             List<RendezVous> rdvs = rendezVousService.getRendezVousByMedecinId(medecinId);
+            System.out.println("Found " + rdvs.size() + " RDVs for medecin " + medecinId);
+
+            // Log each RDV for debugging
+            for (RendezVous rdv : rdvs) {
+                System.out.println("RDV ID: " + rdv.getId() +
+                        ", Patient: " + (rdv.getPatient() != null ? rdv.getPatient().getName() : "null") +
+                        ", Date: " + rdv.getDate() +
+                        ", Status: " + rdv.getStatus());
+            }
+
             return ResponseEntity.ok(rdvs);
         } catch (Exception e) {
+            System.err.println("Error fetching RDVs for medecin " + medecinId + ": " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateRendezVous(
@@ -167,6 +179,7 @@ public class RendezVousRestController {
     }
 
 
+    // In RendezVousRestController.java
     @PatchMapping("/{id}/status")
     public ResponseEntity<RendezVous> updateStatus(
             @PathVariable Long id,
@@ -174,13 +187,24 @@ public class RendezVousRestController {
 
         try {
             String statusString = body.get("status");
-
             StatusRendezVous newStatus = StatusRendezVous.valueOf(statusString.toUpperCase());
 
             RendezVous rdv = rendezVousService.getRendezVousById(id);
             rdv.setStatus(newStatus);
 
             RendezVous updated = rendezVousService.createRendezvous(rdv);
+
+            if (newStatus == StatusRendezVous.APPROVED) {
+                try {
+                    Long medecinId = rdv.getMedecin().getId();
+                    Long patientId = rdv.getPatient().getId();
+                    medecinService.addPatientToMedecin(medecinId, patientId);
+
+                    System.out.println("Patient " + patientId + " added to medecin " + medecinId);
+                } catch (Exception e) {
+                    System.err.println("Could not add patient to medecin list: " + e.getMessage());
+                }
+            }
 
             return ResponseEntity.ok(updated);
 
@@ -190,7 +214,6 @@ public class RendezVousRestController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-
 
 
     @DeleteMapping("/{id}")

@@ -1,7 +1,6 @@
 package com.mycompany.platforme_telemedcine.Services;
 
 import com.mycompany.platforme_telemedcine.Models.DossierMedical;
-
 import java.util.List;
 
 public interface DossierMedicalService {

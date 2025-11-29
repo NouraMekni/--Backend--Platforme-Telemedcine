@@ -1,6 +1,7 @@
 package com.mycompany.platforme_telemedcine.RestControllers;
 
 import com.mycompany.platforme_telemedcine.Models.Medecin;
+import com.mycompany.platforme_telemedcine.Models.Patient;
 import com.mycompany.platforme_telemedcine.Models.UserRole;
 import com.mycompany.platforme_telemedcine.Services.MedecinService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,8 @@ public class MedecinRestController {
         List<Medecin> meds = medecinService.getAllMedecin();
         if (meds.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }return  new ResponseEntity<>(meds, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(meds, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -65,8 +67,23 @@ public class MedecinRestController {
         Medecin med = medecinService.getMedecinById(id);
         if (med != null) {
             return new ResponseEntity<>(med, HttpStatus.OK);
-        }else {
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/{medecinId}/patients/{patientId}")
+    public ResponseEntity<?> addPatientToMedecin(
+            @PathVariable Long medecinId,
+            @PathVariable Long patientId) {
+        try {
+            System.out.println("➕ Adding patient " + patientId + " to medecin " + medecinId);
+            medecinService.addPatientToMedecin(medecinId, patientId);
+            return new ResponseEntity<>("Patient added successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error adding patient to medecin: " + e.getMessage());
+            return new ResponseEntity<>("Error adding patient: " + e.getMessage(),
+                    HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -77,17 +94,48 @@ public class MedecinRestController {
             medecin.setId(id);
             medecinService.updateMedecin(medecin);
             return new ResponseEntity<>(medecin, HttpStatus.OK);
-        }else {
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     @DeleteMapping("/{id}")
-    public  ResponseEntity<HttpStatus> deleteMedecin(@PathVariable Long id) {
-        try{
+    public ResponseEntity<HttpStatus> deleteMedecin(@PathVariable Long id) {
+        try {
             medecinService.deleteMedecinById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{medecinId}/patients")
+    public ResponseEntity<List<Patient>> getMedecinPatients(@PathVariable Long medecinId) {
+        try {
+            System.out.println("🔍 Fetching patients for medecin ID: " + medecinId);
+            List<Patient> patients = medecinService.getPatientsByMedecin(medecinId);
+            System.out.println("📋 Found " + patients.size() + " patients for medecin " + medecinId);
+            return new ResponseEntity<>(patients, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error fetching patients for medecin " + medecinId + ": " + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+
+    @DeleteMapping("/{medecinId}/patients/{patientId}")
+    public ResponseEntity<?> removePatientFromMedecin(
+            @PathVariable Long medecinId,
+            @PathVariable Long patientId) {
+        try {
+            System.out.println("Removing patient " + patientId + " from medecin " + medecinId);
+            medecinService.removePatientFromMedecin(medecinId, patientId);
+            return new ResponseEntity<>("Patient removed successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error removing patient from medecin: " + e.getMessage());
+            return new ResponseEntity<>("Error removing patient: " + e.getMessage(),
+                    HttpStatus.BAD_REQUEST);
         }
     }
 }

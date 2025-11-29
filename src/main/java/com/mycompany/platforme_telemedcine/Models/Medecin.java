@@ -1,9 +1,9 @@
 package com.mycompany.platforme_telemedcine.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -14,7 +14,32 @@ public class Medecin extends User{
 
     @JsonIgnore
     @OneToMany(mappedBy = "medecin")
-    private List<RendezVous> rendezVous ;
+    private List<RendezVous> rendezVous;
+
+    @ManyToMany
+    @JoinTable(
+                name = "medecin_patients",
+                joinColumns = @JoinColumn(name = "medecin_id"),
+                inverseJoinColumns = @JoinColumn(name = "patient_id")
+        )
+    private List<Patient> patients = new ArrayList<>();
+
+    public List<Patient> getPatients() {
+        return patients;
+    }
+    public void setPatients(List<Patient> patients) {
+            this.patients = patients;
+        }
+
+        public void addPatient(Patient patient) {
+            if (!this.patients.contains(patient)) {
+                this.patients.add(patient);
+            }
+        }
+
+        public void removePatient(Patient patient) {
+            this.patients.remove(patient);
+        }
 
     public String getSpecialte() {
         return specialte;
@@ -40,4 +65,6 @@ public class Medecin extends User{
     public void setRendezVous(List<RendezVous> rendezVous) {
         this.rendezVous = rendezVous;
     }
+
+
 }
